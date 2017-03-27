@@ -3,6 +3,7 @@ package com.sslab.pokemon;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import com.sslab.pokemon.data.PokemonIndividualData;
 import com.sslab.pokemon.data.PokemonSpeciesData;
 import com.sslab.pokemon.data.PokemonValueData;
 
@@ -16,7 +17,7 @@ import java.util.*;
  */
 public class Pokedex {
     ArrayList<PokemonSpeciesData> pokemonSpeciesDataList = new ArrayList();
-    ArrayList<PokemonSpeciesData> newpokemonDataList = new ArrayList();
+    ArrayList<PokemonIndividualData> newpokemonDataList = new ArrayList();
     public Pokedex()
     {}
 
@@ -47,19 +48,15 @@ public class Pokedex {
         //create a gson object
         Gson gson = new Gson();
         //use gson to write object into json file, remember to convert ArrayList back to normal array first
-        gson.toJson(newpokemonDataList.toArray(),PokemonSpeciesData[].class,writer);
+        gson.toJson(newpokemonDataList.toArray(),PokemonIndividualData[].class,writer);
         //close the writer, very important!!!
         writer.close();
 
     }
 
-    public void addNewPokemon(int id,String name, int[] speciesValue)
+    public void addNewPokemon(PokemonIndividualData data)
     {
-        //TODO create a new PokemonSpeciesData and add to the datalist
-        //your can print out some information if you want
-        PokemonValueData valueData = new PokemonValueData(speciesValue);
-        String s = getPokemonData(id).getType();
-        PokemonSpeciesData data = new PokemonSpeciesData(id,name,valueData,s.split(" "));
+        //TODO create a new PokemonIndividualData and add to the datalist
         newpokemonDataList.add(data);
     }
 

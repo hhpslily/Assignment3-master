@@ -38,13 +38,14 @@ public class PokeGen {
     private JTextField spAtkField;
     private JTextField spDefField;
     private JTextField speedField;
-    private JPanel currentSelectedPanel = slot0;
-    private JPanel nextSelectedPanel = slot0;
+    private JPanel lastSelectedPanel = null;
+    private JPanel currentSelectedPanel = null;
     private ArrayList<JTextField> statFields = new ArrayList<>();
 
     Pokedex pokedex = new Pokedex("bin/pokemonData.json");
     HashMap<JPanel, PokemonIndividualData> pokemonMap = new HashMap<>();
     int id = -1;
+    String speciesName = null;
     public PokeGen() {
         //TODO: initialize statFields to zero
         statFields.add(hpField);
@@ -69,17 +70,19 @@ public class PokeGen {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String str = (String) speciesComboBox.getSelectedItem();
-                String s[] = str.split(": ",2);
+                String s[] = str.split(":");
+                for(String ss:s)
+                    speciesName = ss;
                 if(!s[0].equals("--------------------"))
                     id = Integer.parseInt(s[0]);
                 else id = -1;
                 if(id>0)
-                    setPokemonIcon(id,nextSelectedPanel,true);
+                    setPokemonIcon(id,currentSelectedPanel,true);
                 else{
                     for(int i=0; i<6; i++)
                         statFields.get(i).setText("0");
                     nickNameField.setText("");
-                    nextSelectedPanel.getComponent(0).setVisible(false);
+                    currentSelectedPanel.getComponent(0).setVisible(false);
                 }
             }
         });
@@ -87,12 +90,18 @@ public class PokeGen {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-                currentSelectedPanel.setBorder(BorderFactory.createEtchedBorder());
-                nextSelectedPanel = (JPanel) e.getComponent();
-                nextSelectedPanel.setBorder(BorderFactory.createBevelBorder(1));
-                setPokemon(currentSelectedPanel);
-                loadPokemon(nextSelectedPanel);
-                currentSelectedPanel = nextSelectedPanel;
+                //TODO: set the last slot's border to default
+                if(lastSelectedPanel!=null) lastSelectedPanel.setBorder(BorderFactory.createEtchedBorder());
+                //TODO get the currentSelected slot
+                currentSelectedPanel = (JPanel) e.getComponent();
+                //TODO: set the currentSelected slot's border
+                currentSelectedPanel.setBorder(BorderFactory.createBevelBorder(1));
+                //TODO: save the data of the previous slot
+                setPokemon(lastSelectedPanel);
+                //TODO: load the data of the current slot
+                loadPokemon(currentSelectedPanel);
+                //TODO: update the lastSelected slot
+                lastSelectedPanel = currentSelectedPanel;
             }
         };
         slot0.addMouseListener(listener);
@@ -105,10 +114,9 @@ public class PokeGen {
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int[] valArray = new int[6];
-                for(int i=0;i<6;i++)
-                    valArray[i] = Integer.parseInt(statFields.get(i).getText());
-                pokedex.addNewPokemon(id,nickNameField.getText(),valArray);
+                setPokemon(currentSelectedPanel);
+                PokemonIndividualData data = pokemonMap.get(currentSelectedPanel);
+                pokedex.addNewPokemon(data);
                 try {
                     pokedex.saveFile("morris_new_pokemon.json");
                 } catch (IOException e1) {
@@ -129,11 +137,12 @@ public class PokeGen {
     }
 
     public void setPokemon(JPanel panel) {
+        if(panel==null) return;
         int[] valArray = new int[6];
         for(int i=0;i<6;i++)
             valArray[i] = Integer.parseInt(statFields.get(i).getText());
         PokemonValueData speciesValue = new PokemonValueData(valArray);
-        PokemonIndividualData data = new PokemonIndividualData(id,nickNameField.getText(),speciesValue);
+        PokemonIndividualData data = new PokemonIndividualData(id,nickNameField.getText(),speciesValue,speciesName);
         pokemonMap.put(panel,data);
     }
 
@@ -146,7 +155,12 @@ public class PokeGen {
         }
         else {
             PokemonIndividualData data = pokemonMap.get(panel);
-            speciesComboBox.setSelectedIndex(data.getId()+1);
+            id = data.getId();
+            String s;
+            s = Integer.toString(id);
+            s = s.concat(":");
+            s = s.concat(data.getSpeciesName());
+            speciesComboBox.setSelectedItem(s);
             nickNameField.setText(data.getNickName());
             int[] valArray = data.getSpeciesValue().getValArray();
             for(int i=0;i<6;i++)
